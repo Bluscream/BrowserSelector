@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -282,14 +282,43 @@ To open multiple urls at the same time and wait for them, try the following:
 						return;
 					}
 				}
+                // No matching browser was found, handle default
 
-				MessageBox.Show(string.Format("Unable to find a suitable browser matching {0}.", url), "BrowserSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(string.Format("Unable to launch browser, sorry :(\r\n\r\nPlease send a copy of this error to DanTup.\r\n\r\n{0}.", ex.ToString()), "BrowserSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-		}
+                var availableBrowsers = ConfigReader.GetBrowsers().ToList();
+                var openBrowsers = GetOpenBrowsers(availableBrowsers);
+                if (openBrowsers.Count > 0)
+                {
+                    p = Process.Start(openBrowsers[0].Location, _url);
+                    if (waitForClose) p.WaitForExit();
+                    return;
+                }
+                else if (availableBrowsers.Count > 0)
+                {
+                    p = Process.Start(availableBrowsers[0].Location, _url);
+                    if (waitForClose) p.WaitForExit();
+                    return;
+                }
+                MessageBox.Show($"Unable to find a suitable browser matching {url}.", "BrowserSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                var nl = Environment.NewLine + Environment.NewLine;
+                MessageBox.Show(string.Format("Unable to launch browser, sorry :({0}Please send a copy of this error to DanTup.{0}{1}.", nl, ex), "BrowserSelector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static List<Browser> GetOpenBrowsers(List<Browser> browsers)
+        {
+            var ret = new List<Browser>();
+            foreach (var browser in browsers)
+            {
+                var match = Regex.Match(browser.Location, @"(\w+)\.exe", RegexOptions.IgnoreCase);
+                if (!match.Success) continue;
+                if (Process.GetProcessesByName(match.Groups[1].Value).Length < 1) continue;
+                ret.Add(browser);
+            }
+            return ret;
+        }
 
 
 		static void CreateSampleSettings()
