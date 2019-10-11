@@ -15,36 +15,53 @@ namespace DanTup.BrowserSelector
 		/// </summary>
 		public static string ConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BrowserSelector.ini");
 
-		static internal IEnumerable<UrlPreference> GetUrlPreferences()
-		{
-			if (!File.Exists(ConfigPath))
-				throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
+        static internal IEnumerable<UrlPreference> GetUrlPreferences()
+        {
+            if (!File.Exists(ConfigPath))
+                throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
 
-			// Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
-			var configLines =
-				File.ReadAllLines(ConfigPath)
-				.Select(l => l.Trim())
-				.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
+            // Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
+            var configLines =
+                File.ReadAllLines(ConfigPath)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
 
-			// Read the browsers section into a dictionary.
-			var browsers = GetConfig(configLines, "browsers")
-				.Select(SplitConfig)
-				.Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value })
-				.ToDictionary(b => b.Name);
+            // Read the browsers section into a dictionary.
+            var browsers = GetConfig(configLines, "browsers")
+                .Select(SplitConfig)
+                .Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value })
+                .ToDictionary(b => b.Name);
 
-			// If there weren't any at all, force IE in there (nobody should create a config file like this!).
-			if (!browsers.Any())
-				browsers.Add("ie", new Browser { Name = "ie", Location = @"iexplore.exe ""{0}""" });
+            // If there weren't any at all, force IE in there (nobody should create a config file like this!).
+            if (!browsers.Any())
+                browsers.Add("ie", new Browser { Name = "ie", Location = @"iexplore.exe ""{0}""" });
 
-			// Read the url preferences, and add a catchall ("*") for the first browser.
-			var urls = GetConfig(configLines, "urls")
-				.Select(SplitConfig)
-				.Select(kvp => new UrlPreference { UrlPattern = kvp.Key, Browser = browsers.ContainsKey(kvp.Value) ? browsers[kvp.Value] : null })
-				.Union(new[] { new UrlPreference { UrlPattern = "*", Browser = browsers.FirstOrDefault().Value } }) // Add in a catchall that uses the first browser
-				.Where(up => up.Browser != null);
+            // Read the url preferences, and add a catchall ("*") for the first browser.
+            var urls = GetConfig(configLines, "urls")
+                .Select(SplitConfig)
+                .Select(kvp => new UrlPreference { UrlPattern = kvp.Key, Browser = browsers.ContainsKey(kvp.Value) ? browsers[kvp.Value] : null })
+                /* .Union(new[] { new UrlPreference { UrlPattern = "*", Browser = browsers.FirstOrDefault().Value } }) // Add in a catchall that uses the first browser
+				.Where(up => up.Browser != null)*/;
 
-			return urls;
-		}
+            return urls;
+        }
+
+        static internal IEnumerable<Browser> GetBrowsers()
+        {
+            if (!File.Exists(ConfigPath))
+                throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
+
+            // Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
+            var configLines =
+                File.ReadAllLines(ConfigPath)
+                    .Select(l => l.Trim())
+                    .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
+
+            // Read the browsers section into a dictionary.
+            return GetConfig(configLines, "browsers")
+                .Select(SplitConfig)
+                .Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value });
+        }
 
 		static IEnumerable<string> GetConfig(IEnumerable<string> configLines, string configName)
 		{
