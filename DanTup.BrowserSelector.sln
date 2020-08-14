@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29319.158
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DanTup.BrowserSelector", "DanTup.BrowserSelector\DanTup.BrowserSelector.csproj", "{39E2D988-557D-40D2-9D0B-AAC097FE98C5}"
 EndProject
@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "URLCatcher", "..\URLCatcher\URLCatcher.csproj", "{DCA2AE59-F0FD-415F-8EB5-F883611AE203}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,8 +22,15 @@ Global
 		{39E2D988-557D-40D2-9D0B-AAC097FE98C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39E2D988-557D-40D2-9D0B-AAC097FE98C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39E2D988-557D-40D2-9D0B-AAC097FE98C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCA2AE59-F0FD-415F-8EB5-F883611AE203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCA2AE59-F0FD-415F-8EB5-F883611AE203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCA2AE59-F0FD-415F-8EB5-F883611AE203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCA2AE59-F0FD-415F-8EB5-F883611AE203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {620B807E-632F-4491-AB37-C8ABC829E03B}
 	EndGlobalSection
 EndGlobal

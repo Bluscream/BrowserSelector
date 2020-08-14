@@ -8,125 +8,142 @@ using System.Windows.Forms;
 
 namespace DanTup.BrowserSelector
 {
-	static class ConfigReader
-	{
-		/// <summary>
-		/// Config lives in the same folder as the EXE, name "BrowserSelector.ini".
-		/// </summary>
-		public static string ConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BrowserSelector.ini");
+    internal static class ConfigReader
+    {
+        /// <summary>
+        /// Config lives in the same folder as the EXE, name "BrowserSelector.ini".
+        /// </summary>
+        public static string ConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BrowserSelector.ini");
 
-		static internal IEnumerable<UrlPreference> GetUrlPreferences()
-		{
-			if (!File.Exists(ConfigPath))
-				throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
+        static internal IEnumerable<UrlPreference> GetUrlPreferences()
+        {
+            if (!File.Exists(ConfigPath))
+                throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
 
-			// Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
-			var configLines =
-				File.ReadAllLines(ConfigPath)
-				.Select(l => l.Trim())
-				.Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
+            // Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
+            var configLines =
+                File.ReadAllLines(ConfigPath)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
 
-			// Read the browsers section into a dictionary.
-			var browsers = GetConfig(configLines, "browsers")
-				.Select(SplitConfig)
-				.Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value })
-				.ToDictionary(b => b.Name);
+            // Read the browsers section into a dictionary.
+            var browsers = GetConfig(configLines, "browsers")
+                .Select(SplitConfig)
+                .Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value })
+                .ToDictionary(b => b.Name);
 
-			// If there weren't any at all, force IE in there (nobody should create a config file like this!).
-			if (!browsers.Any())
-				browsers.Add("ie", new Browser { Name = "ie", Location = @"iexplore.exe ""{0}""" });
+            // If there weren't any at all, force IE in there (nobody should create a config file like this!).
+            if (!browsers.Any())
+                browsers.Add("ie", new Browser { Name = "ie", Location = @"iexplore.exe ""{0}""" });
 
-			// Read the url preferences, and add a catchall ("*") for the first browser.
-			var urls = GetConfig(configLines, "urls")
-				.Select(SplitConfig)
-				.Select(kvp => new UrlPreference { UrlPattern = kvp.Key, Browser = browsers.ContainsKey(kvp.Value) ? browsers[kvp.Value] : null })
-				.Union(new[] { new UrlPreference { UrlPattern = "*", Browser = browsers.FirstOrDefault().Value } }) // Add in a catchall that uses the first browser
-				.Where(up => up.Browser != null);
+            // Read the url preferences, and add a catchall ("*") for the first browser.
+            var urls = GetConfig(configLines, "urls")
+                .Select(SplitConfig)
+                .Select(kvp => new UrlPreference { UrlPattern = kvp.Key, Browser = browsers.ContainsKey(kvp.Value) ? browsers[kvp.Value] : null })
+                /* .Union(new[] { new UrlPreference { UrlPattern = "*", Browser = browsers.FirstOrDefault().Value } }) // Add in a catchall that uses the first browser
+				.Where(up => up.Browser != null)*/;
 
-			return urls;
-		}
+            return urls;
+        }
 
-		static IEnumerable<string> GetConfig(IEnumerable<string> configLines, string configName)
-		{
-			// Read everything from [configName] up to the next [section].
-			return configLines
-				.SkipWhile(l => !l.StartsWith(string.Format("[{0}]", configName), StringComparison.OrdinalIgnoreCase))
-				.Skip(1)
-				.TakeWhile(l => !l.StartsWith("[", StringComparison.OrdinalIgnoreCase))
-				.Where(l => l.Contains('='));
-		}
+        static internal IEnumerable<Browser> GetBrowsers()
+        {
+            if (!File.Exists(ConfigPath))
+                throw new InvalidOperationException(string.Format("The config file was not found:\r\n{0}\r\n", ConfigPath));
 
-		/// <summary>
-		/// Splits a line on the first '=' (poor INI parsing).
-		/// </summary>
-		static KeyValuePair<string, string> SplitConfig(string configLine)
-		{
-			var parts = configLine.Split(new[] { '=' }, 2);
-			return new KeyValuePair<string, string>(parts[0].Trim(), parts[1].Trim());
-		}
+            // Poor mans INI file reading... Skip comment lines (TODO: support comments on other lines).
+            var configLines =
+                File.ReadAllLines(ConfigPath)
+                    .Select(l => l.Trim())
+                    .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith(";") && !l.StartsWith("#"));
 
-		public static void CreateSampleIni()
-		{
-			Assembly assembly;
-			Stream stream;
-			StringBuilder result;
+            // Read the browsers section into a dictionary.
+            return GetConfig(configLines, "browsers")
+                .Select(SplitConfig)
+                .Select(kvp => new Browser { Name = kvp.Key, Location = kvp.Value });
+        }
 
-			assembly = Assembly.GetExecutingAssembly();
-			//stream = assembly.GetManifestResourceStream("DanTup.BrowserSelector.BrowserSelector.ini");
-			stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames()[0]);
-			if (stream == null)
-			{
-				return;
-			}
+        private static IEnumerable<string> GetConfig(IEnumerable<string> configLines, string configName)
+        {
+            // Read everything from [configName] up to the next [section].
+            return configLines
+                .SkipWhile(l => !l.StartsWith(string.Format("[{0}]", configName), StringComparison.OrdinalIgnoreCase))
+                .Skip(1)
+                .TakeWhile(l => !l.StartsWith("[", StringComparison.OrdinalIgnoreCase))
+                .Where(l => l.Contains('='));
+        }
 
-			result = new StringBuilder();
+        /// <summary>
+        /// Splits a line on the first '=' (poor INI parsing).
+        /// </summary>
+        private static KeyValuePair<string, string> SplitConfig(string configLine)
+        {
+            var parts = configLine.Split(new[] { '=' }, 2);
+            return new KeyValuePair<string, string>(parts[0].Trim(), parts[1].Trim());
+        }
 
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				result.Append(reader.ReadToEnd());
-				reader.Close();
-			}
+        public static void CreateSampleIni()
+        {
+            Assembly assembly;
+            Stream stream;
+            StringBuilder result;
 
-			if (result.Length > 0)
-			{
-				if (File.Exists(ConfigPath))
-				{
-					string newName = GetBackupFileName(ConfigPath);
-					File.Move(ConfigPath, newName);
-				}
+            assembly = Assembly.GetExecutingAssembly();
+            //stream = assembly.GetManifestResourceStream("DanTup.BrowserSelector.BrowserSelector.ini");
+            stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames()[0]);
+            if (stream == null)
+            {
+                return;
+            }
 
-				File.WriteAllText(ConfigPath, result.ToString());
-			}
-		}
+            result = new StringBuilder();
 
-		static string GetBackupFileName(string fileName)
-		{
-			string newName;
-			string fname;
-			string fext;
-			int index = 0;
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                result.Append(reader.ReadToEnd());
+                reader.Close();
+            }
 
-			fname = Path.GetDirectoryName(fileName) + "\\" + Path.GetFileNameWithoutExtension(fileName);
-			fext = Path.GetExtension(fileName);
+            if (result.Length > 0)
+            {
+                if (File.Exists(ConfigPath))
+                {
+                    string newName = GetBackupFileName(ConfigPath);
+                    File.Move(ConfigPath, newName);
+                }
 
-			do
-			{
-				newName = string.Format("{0}.{1:0000}{2}", fname, ++index, fext);
-			} while (File.Exists(newName));
+                File.WriteAllText(ConfigPath, result.ToString());
+            }
+        }
 
-			return newName;
-		}
-	}
+        private static string GetBackupFileName(string fileName)
+        {
+            string newName;
+            string fname;
+            string fext;
+            int index = 0;
 
-	class Browser
-	{
-		public string Name { get; set; }
-		public string Location { get; set; }
-	}
+            fname = Path.GetDirectoryName(fileName) + "\\" + Path.GetFileNameWithoutExtension(fileName);
+            fext = Path.GetExtension(fileName);
 
-	class UrlPreference
-	{
-		public string UrlPattern { get; set; }
-		public Browser Browser { get; set; }
-	}
+            do
+            {
+                newName = string.Format("{0}.{1:0000}{2}", fname, ++index, fext);
+            } while (File.Exists(newName));
+
+            return newName;
+        }
+    }
+
+    internal class Browser
+    {
+        public string Name { get; set; }
+        public string Location { get; set; }
+    }
+
+    internal class UrlPreference
+    {
+        public string UrlPattern { get; set; }
+        public Browser Browser { get; set; }
+    }
 }
