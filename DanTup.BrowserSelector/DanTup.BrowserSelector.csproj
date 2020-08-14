@@ -73,10 +73,16 @@
   <ItemGroup>
     <None Include="App.config" />
     <EmbeddedResource Include="BrowserSelector.ini" />
+    <None Include="FodyWeavers.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Browser.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
