@@ -182,7 +182,6 @@ To open multiple urls at the same time and wait for them, try the following:
 
         private static void LaunchWeblocFile(string file, bool waitForClose = false)
         {
-            string url = "";
             XmlDocument doc;
             XmlNode node;
 
@@ -210,7 +209,7 @@ To open multiple urls at the same time and wait for them, try the following:
                 return;
             }
 
-            url = node.InnerText;
+            string url = node.InnerText;
             if (url.Length > 0)
             {
                 LaunchBrowser(url);
@@ -319,6 +318,7 @@ To open multiple urls at the same time and wait for them, try the following:
             var ret = new List<Browser>();
             foreach (var browser in browsers)
             {
+                if (browser.Name.StartsWith("nobrowser_", StringComparison.OrdinalIgnoreCase)) continue;
                 var match = Regex.Match(browser.Location, @"(\w+)\.exe", RegexOptions.IgnoreCase);
                 if (!match.Success) continue;
                 if (Process.GetProcessesByName(match.Groups[1].Value).Length < 1) continue;
